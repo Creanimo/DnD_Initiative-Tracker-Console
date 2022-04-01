@@ -36,8 +36,9 @@ class character:
         self.armorClass = armorClass
 
 class encounter:
-    def __init__(self, name, participants) :
+    def __init__(self, name, participants, encounterRunning) :
         self.name = name
+        self.encounterRunning = encounterRunning
         if isinstance(participants, list):
             self.participants = participants
         else:
@@ -52,18 +53,36 @@ class encounter:
         self.participants.append(character(addMe,0,0))
         print(f"Added {addMe}")
 
-    def battleCommands():
+    def removeCharacter(self,removeMe):
+        i = 1
+        while i<len(self.participants):
+            if self.participants[i-1].name.lower() == removeMe.lower():
+                self.participants.pop(i-1)
+            else:
+                i+=1
+                continue
+
+
+    def battleCommands(self):
         commandNext = {"n","next",""}
         commandExit = {"e", "exit", "q", "quit"}
+        commandRemove = {"r", "remove", "d", "del"}
+        commandAdd = {"a", "add"}
         while True:
             print("What now?")
             battleAction = input().lower()
             if battleAction in commandNext:
                 return
-            elif battleAction in commandExit:
-                return "exitEncounter"
+            battleAction = battleAction.split()
+            if battleAction[0] in commandExit:
+                self.encounterRunning = False
+                return
+            elif battleAction[0] in commandRemove and len(battleAction) == 2 :
+                self.removeCharacter(battleAction[1])
+            elif battleAction[0] in commandAdd and len(battleAction) == 2:
+                pass
             else:
-                print("Make a valid choice! n = next, e = exit")
+                print("Make a valid choice! n = next, e = exit, r (charname)")
         
 
 
@@ -73,11 +92,11 @@ choice_defaultCharacters = uitools.question_yn("Would you like to load the defau
 if choice_defaultCharacters == True :
     Hylwin = character("Hylwin",0,0)
     Zayne = character("Zayne",0,0)
-    CurrentEncounter = encounter("Current Encounter",[Hylwin, Zayne])
+    CurrentEncounter = encounter("Current Encounter",[Hylwin, Zayne], False)
     for i in CurrentEncounter.participants:
         print(f"Added {i.name}")
 else :
-    CurrentEncounter = encounter("Current Encounter",[])
+    CurrentEncounter = encounter("Current Encounter",[], False)
 
 while True :
   choice_addCharacters = uitools.question_yn("Add a character?")
@@ -98,23 +117,24 @@ print("Time to roll initiative")
 for i in CurrentEncounter.participants:
     i.initiative = uitools.question_int(f"Initiative for {i.name}?")
 print("Initiative is as follows:")
-sortedInitiative = sorted(CurrentEncounter.participants, key=lambda x: x.initiative, reverse = True)
-for i in sortedInitiative:
+CurrentEncounter.participants = sorted(CurrentEncounter.participants, key=lambda x: x.initiative, reverse = True)
+for i in CurrentEncounter.participants:
     print(f"{i.name} - {i.initiative}")
 
 # Combat
 
 print("Starting Combat")
 round = 0
-while True:
+CurrentEncounter.encounterRunning = True
+while CurrentEncounter.encounterRunning == True:
     round+= 1
     print(f"Round {round}")
-    for i in sortedInitiative:
-        ExitAction = False
+    for i in CurrentEncounter.participants:
         print(f"Your turn, {i.name}")
-        collectCommand = ""
-        collectCommand = encounter.battleCommands()
-        if collectCommand ==  "exitEncounter":
+        CurrentEncounter.battleCommands()
+        if CurrentEncounter.encounterRunning == False:
             break
-    if collectCommand ==  "exitEncounter":
-        break
+
+
+# removing and adding during battle
+# adding status
