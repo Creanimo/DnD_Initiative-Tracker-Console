@@ -1,4 +1,9 @@
 import operator
+from rich import print
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.table import Table
+from rich.panel import Panel
 
 class uitools:
     def question_yn(question) :
@@ -55,7 +60,7 @@ class encounter:
 
     def removeCharacter(self,removeMe):
         i = 1
-        while i<len(self.participants):
+        while i<=len(self.participants):
             if self.participants[i-1].name.lower() == removeMe.lower():
                 self.participants.pop(i-1)
             else:
@@ -85,8 +90,11 @@ class encounter:
                 print("Make a valid choice! n = next, e = exit, r (charname)")
         
 
+print(Markdown("# DnD Initiative Tracker"))
 
 # Build character list for the encounter
+
+print(Markdown("## Who is playing?"))
 
 choice_defaultCharacters = uitools.question_yn("Would you like to load the default hero characters?")
 if choice_defaultCharacters == True :
@@ -100,7 +108,6 @@ else :
 
 while True :
   choice_addCharacters = uitools.question_yn("Add a character?")
-  print(choice_addCharacters)
   if choice_addCharacters == True :
     print("What's the name?")
     CurrentEncounter.addCharacter(input())
@@ -113,28 +120,34 @@ while True :
 
 # Getting the initiative order
 
-print("Time to roll initiative")
+print(Markdown("## Time to roll initiative"))
 for i in CurrentEncounter.participants:
     i.initiative = uitools.question_int(f"Initiative for {i.name}?")
-print("Initiative is as follows:")
+
 CurrentEncounter.participants = sorted(CurrentEncounter.participants, key=lambda x: x.initiative, reverse = True)
+tableInitiativeOrder = Table(title="Initiative is as follows:")
+
+tableInitiativeOrder.add_column("Name")
+tableInitiativeOrder.add_column("Initiative", justify="right")
 for i in CurrentEncounter.participants:
-    print(f"{i.name} - {i.initiative}")
+    tableInitiativeOrder.add_row(i.name, str(i.initiative))
+print(tableInitiativeOrder)
 
 # Combat
 
-print("Starting Combat")
+print(Markdown("## Starting Combat"))
 round = 0
 CurrentEncounter.encounterRunning = True
 while CurrentEncounter.encounterRunning == True:
     round+= 1
-    print(f"Round {round}")
+    announceRound = f"### Round {round}" 
+    print(Markdown(announceRound))
     for i in CurrentEncounter.participants:
-        print(f"Your turn, {i.name}")
+        print(Markdown(f"#### Your turn, {i.name}"))
         CurrentEncounter.battleCommands()
         if CurrentEncounter.encounterRunning == False:
             break
 
 
-# removing and adding during battle
+# adding during battle
 # adding status
