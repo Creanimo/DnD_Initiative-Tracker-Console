@@ -60,14 +60,21 @@ class encounter:
         print(f"Added {addMe}")
 
     def removeCharacter(self,removeMe):
+        try:
+            self.participants.pop(self.getIndexOfParticipant(removeMe))
+            return
+        except:
+            print(f"There is no character named {charname}")
+
+
+    def getIndexOfParticipant(self,charname):
         i = 1
         while i<=len(self.participants):
-            if self.participants[i-1].name.lower() == removeMe.lower():
-                self.participants.pop(i-1)
+            if self.participants[i-1].name.lower() == charname.lower():
+                return i-1
             else:
-                i+=1
                 continue
-
+        return
 
     def battleCommands(self):
         commandNext = {"n","next",""}
