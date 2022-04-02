@@ -64,7 +64,7 @@ class encounter:
             self.participants.pop(self.getIndexOfParticipant(removeMe))
             return
         except:
-            print(f"There is no character named {charname}")
+            print(f"There is no character named {removeMe}")
 
 
     def getIndexOfParticipant(self,charname):
@@ -73,6 +73,7 @@ class encounter:
             if self.participants[i-1].name.lower() == charname.lower():
                 return i-1
             else:
+                i+=1
                 continue
         return
 
