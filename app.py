@@ -1,4 +1,5 @@
 import operator
+import shlex
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
@@ -78,13 +79,13 @@ class encounter:
             battleAction = input().lower()
             if battleAction in commandNext:
                 return
-            battleAction = battleAction.split()
+            battleAction = shlex.split(battleAction)
             if battleAction[0] in commandExit:
                 self.encounterRunning = False
                 return
-            elif battleAction[0] in commandRemove and len(battleAction) == 2 :
+            elif battleAction[0] in commandRemove:
                 self.removeCharacter(battleAction[1])
-            elif battleAction[0] in commandAdd and len(battleAction) == 2:
+            elif battleAction[0] in commandAdd:
                 pass
             else:
                 print("Make a valid choice! n = next, e = exit, r (charname)")
