@@ -61,13 +61,13 @@ class encounter:
 
     def removeCharacter(self,removeMe):
         try:
-            self.participants.pop(self.getIndexOfParticipant(removeMe))
+            self.participants.pop(self.getIndexOfParticipantByName(removeMe))
             return
         except:
             print(f"There is no character named {removeMe}")
 
 
-    def getIndexOfParticipant(self,charname):
+    def getIndexOfParticipantByName(self,charname):
         i = 1
         while i<=len(self.participants):
             if self.participants[i-1].name.lower() == charname.lower():
@@ -76,6 +76,15 @@ class encounter:
                 i+=1
                 continue
         return
+
+    def getIndexOfParticipantByInitiative(self,initiative):
+        i = 1
+        activeCharacter = []
+        while i<=len(self.participants):
+            if self.participants[i-1].initiative == initiative:
+                activeCharacter.append(i-1)
+            i+=1
+        return activeCharacter
 
     def battleCommands(self):
         commandNext = {"n","next",""}
@@ -149,13 +158,23 @@ round = 0
 CurrentEncounter.encounterRunning = True
 while CurrentEncounter.encounterRunning == True:
     round+= 1
-    announceRound = f"### Round {round}" 
+    announceRound = f"### Round {round}"
     print(Markdown(announceRound))
-    for i in CurrentEncounter.participants:
-        print(Markdown(f"#### Your turn, {i.name}"))
-        CurrentEncounter.battleCommands()
+
+    highestInitiative = CurrentEncounter.participants[0].initiative
+    currentInitiative = highestInitiative
+
+    while currentInitiative >= 1:
+        activeCharacterIndex = CurrentEncounter.getIndexOfParticipantByInitiative(currentInitiative)
+        if len(activeCharacterIndex) != 0:
+            for i in activeCharacterIndex:
+                print(Markdown(f"#### {CurrentEncounter.participants[i].initiative}: Your turn, {CurrentEncounter.participants[i].name}"))
+            CurrentEncounter.battleCommands()
+            CurrentEncounter.participants = sorted(CurrentEncounter.participants, key=lambda x: x.initiative, reverse = True)
         if CurrentEncounter.encounterRunning == False:
             break
+        currentInitiative-= 1
+        continue
 
 
 # adding during battle
