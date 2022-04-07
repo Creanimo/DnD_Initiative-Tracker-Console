@@ -1,0 +1,12 @@
+{
+    "blessed": {
+        "name": "blessed",
+        "description": "Add a d4 to attack rolls and ability checks",
+        "icon": "😇"
+    },
+    "blinded": {
+        "name": "blinded",
+        "description": "Can’t see and automatically fails any ability check that requires sight. Attacks against this creature have advantage, this creature attacks with disadvantage.",
+        "icon": "😵"
+    }
+}

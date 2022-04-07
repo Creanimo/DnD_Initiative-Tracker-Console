@@ -36,10 +36,22 @@ class uitools:
 
 
 class character:
-    def __init__(self, name, initiative, armorClass) :
+    def __init__(self, name, initiative, armorClass, conditions = []) :
         self.name = name
         self.initiative = initiative
         self.armorClass = armorClass
+
+class characterconditions:
+    def __init__(self, name, description, icon, turns = False) :
+        self.name = name
+        self.description = description
+        self.icon = icon
+
+    def getDefaultList(self) :
+        defaultList = open(config/defaultconditions.json)
+        defaultList = json.loads(defaultList)
+        close(config/statusdefaults.json)
+        return defaultList
 
 class encounter:
     def __init__(self, name, participants, encounterRunning) :
