@@ -50,7 +50,7 @@ class characterconditions:
     def getDefaultList(self) :
         defaultList = open(config/defaultconditions.json)
         defaultList = json.loads(defaultList)
-        close(config/statusdefaults.json)
+        close(config/defaultconditions.json)
         return defaultList
 
 class encounter:
