@@ -1,4 +1,5 @@
 import operator
+import json
 import shlex
 from rich import print
 from rich.console import Console
@@ -47,11 +48,20 @@ class characterconditions:
         self.description = description
         self.icon = icon
 
-    def getDefaultList(self) :
-        defaultList = open(config/defaultconditions.json)
-        defaultList = json.loads(defaultList)
-        close(config/defaultconditions.json)
+    def fetchDefaultList() :
+        defaultList = open("config/defaultconditions.json")
+        defaultList = json.load(defaultList)
+        close("config/defaultconditions.json")
         return defaultList
+
+    def getDefaultCondition(self, statusname):
+        defaultList = self.fetchDefaultList()
+        if statusname in defaultList.keys():
+            return characterconditions(defaultList[statusname]["name"],defaultList[statusname]["description"],defaultList[statusname]["icon"])
+        else:
+            print("This condition does not exist in the list of default conditions")
+
+
 
 class encounter:
     def __init__(self, name, participants, encounterRunning) :
