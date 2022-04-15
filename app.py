@@ -37,10 +37,19 @@ class uitools:
 
 
 class character:
-    def __init__(self, name, initiative, armorClass, conditions = []) :
+    def __init__(self, name, initiative, armorClass, conditions) :
         self.name = name
         self.initiative = initiative
         self.armorClass = armorClass
+        self.conditions = conditions
+
+    def addCondition(self, conditionname):
+        defaultList = characterconditions.fetchDefaultList()
+        if conditionname.lower() in defaultList.keys():
+            self.conditions[conditionname] = characterconditions(defaultList[conditionname]["name"],defaultList[conditionname]["description"],defaultList[conditionname]["icon"])
+        else:
+            description = input("Enter a note or description")
+            self.conditions[conditionname] = characterconditions(conditionname,description,"")
 
 class characterconditions:
     def __init__(self, name, description, icon, turns = False) :
@@ -49,17 +58,10 @@ class characterconditions:
         self.icon = icon
 
     def fetchDefaultList() :
-        defaultList = open("config/defaultconditions.json")
-        defaultList = json.load(defaultList)
-        close("config/defaultconditions.json")
+        file = open("config/defaultconditions.json")
+        defaultList = json.load(file)
+        file.close()
         return defaultList
-
-    def getDefaultCondition(self, statusname):
-        defaultList = self.fetchDefaultList()
-        if statusname in defaultList.keys():
-            return characterconditions(defaultList[statusname]["name"],defaultList[statusname]["description"],defaultList[statusname]["icon"])
-        else:
-            print("This condition does not exist in the list of default conditions")
 
 
 
@@ -78,7 +80,7 @@ class encounter:
             if i.name == addMe:
                 duplicateAppendix = "*"
                 addMe = " ".join((addMe, duplicateAppendix))
-        self.participants.append(character(addMe,0,0))
+        self.participants.append(character(addMe,0,0,{}))
         print(f"Added {addMe}")
 
     def removeCharacter(self,removeMe):
@@ -101,18 +103,19 @@ class encounter:
 
     def getIndexOfParticipantByInitiative(self,initiative):
         i = 1
-        activeCharacter = []
+        CharactersAtThisInitiative = []
         while i<=len(self.participants):
             if self.participants[i-1].initiative == initiative:
-                activeCharacter.append(i-1)
+                CharactersAtThisInitiative.append(i-1)
             i+=1
-        return activeCharacter
+        return CharactersAtThisInitiative
 
     def battleCommands(self):
         commandNext = {"n","next",""}
         commandExit = {"e", "exit", "q", "quit"}
         commandRemove = {"r", "remove", "d", "del"}
         commandAdd = {"a", "add"}
+        commandCondition = {"c", "con", "condition"}
         while True:
             print("What now?")
             battleAction = input().lower()
@@ -126,8 +129,17 @@ class encounter:
                 self.removeCharacter(battleAction[1])
             elif battleAction[0] in commandAdd:
                 pass
+            elif battleAction[0] in commandCondition:
+                charind = self.getIndexOfParticipantByName(battleAction[1])
+                if type(charind) == int :
+                    conditionToAdd = battleAction[2]
+                    # check if condition is already set, delete it
+                    if len(self.participants[charind].conditions)>0 and conditionToAdd in self.participants[charind].conditions.keys() :
+                        del self.participants[charind].conditions[conditionToAdd]
+                    else:
+                        self.participants[charind].addCondition(conditionToAdd)
             else:
-                print("Make a valid choice! n = next, e = exit, r (charname)")
+                print("Make a valid choice! n = next, e = exit, r (charname), c (charname) (condition)")
         
 
 print(Markdown("# DnD Initiative Tracker"))
@@ -138,8 +150,8 @@ print(Markdown("## Who is playing?"))
 
 choice_defaultCharacters = uitools.question_yn("Would you like to load the default hero characters?")
 if choice_defaultCharacters == True :
-    Hylwin = character("Hylwin",0,0)
-    Zayne = character("Zayne",0,0)
+    Hylwin = character("Hylwin",0,0,{})
+    Zayne = character("Zayne",0,0,{})
     CurrentEncounter = encounter("Current Encounter",[Hylwin, Zayne], False)
     for i in CurrentEncounter.participants:
         print(f"Added {i.name}")
@@ -190,7 +202,17 @@ while CurrentEncounter.encounterRunning == True:
         activeCharacterIndex = CurrentEncounter.getIndexOfParticipantByInitiative(currentInitiative)
         if len(activeCharacterIndex) != 0:
             for i in activeCharacterIndex:
+                # showing character name and initiative value
                 print(Markdown(f"#### {CurrentEncounter.participants[i].initiative}: Your turn, {CurrentEncounter.participants[i].name}"))
+                # fetching all conditions
+                if len(CurrentEncounter.participants[i].conditions) > 0 :
+                    tableConditions = Table(title="Current Conditions")
+                    tableConditions.add_column("Condition")
+                    tableConditions.add_column("Description")
+                    conditionlist = list(CurrentEncounter.participants[i].conditions.values())
+                    for i in conditionlist:
+                        tableConditions.add_row(i.name, i.description)
+                    print(tableConditions)
             CurrentEncounter.battleCommands()
             CurrentEncounter.participants = sorted(CurrentEncounter.participants, key=lambda x: x.initiative, reverse = True)
         if CurrentEncounter.encounterRunning == False:
