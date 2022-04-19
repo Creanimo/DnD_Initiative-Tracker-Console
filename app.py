@@ -66,13 +66,14 @@ class characterconditions:
 
 
 class encounter:
-    def __init__(self, name, participants, encounterRunning) :
+    def __init__(self, name, participants, encounterRunning, currentRound) :
         self.name = name
         self.encounterRunning = encounterRunning
         if isinstance(participants, list):
             self.participants = participants
         else:
             print("Participants has to be a list")
+        self.currentRound = currentRound
 
     def addCharacter(self, addMe) :
         # check if name already exist
@@ -140,6 +141,49 @@ class encounter:
                         self.participants[charind].addCondition(conditionToAdd)
             else:
                 print("Make a valid choice! n = next, e = exit, r (charname), c (charname) (condition)")
+
+    def runEncounter(self) :
+        # Printing Initative Order
+        self.participants = sorted(self.participants, key=lambda x: x.initiative, reverse = True)
+        tableInitiativeOrder = Table(title="Initiative is as follows:")
+
+        tableInitiativeOrder.add_column("Name")
+        tableInitiativeOrder.add_column("Initiative", justify="right")
+        for i in CurrentEncounter.participants:
+            tableInitiativeOrder.add_row(i.name, str(i.initiative))
+        print(tableInitiativeOrder)
+        # Encounter start
+        print(Markdown("## Starting Combat"))
+        self.encounterRunning = True
+        while self.encounterRunning == True:
+            announceRound = f"### Round {self.currentRound}"
+            print(Markdown(announceRound))
+
+            highestInitiative = self.participants[0].initiative # is always highest because of sorted() earlier
+            currentInitiative = highestInitiative
+
+            while currentInitiative >= 1:
+                activeCharacterIndex = self.getIndexOfParticipantByInitiative(currentInitiative)
+                if len(activeCharacterIndex) != 0:
+                    for i in activeCharacterIndex:
+                        # showing character name and initiative value
+                        print(Markdown(f"#### {self.participants[i].initiative}: Your turn, {self.participants[i].name}"))
+                        # fetching all conditions
+                        if len(self.participants[i].conditions) > 0 :
+                            tableConditions = Table(title="Current Conditions")
+                            tableConditions.add_column("Condition")
+                            tableConditions.add_column("Description")
+                            conditionlist = list(self.participants[i].conditions.values())
+                            for i in conditionlist:
+                                tableConditions.add_row(i.name, i.description)
+                            print(tableConditions)
+                    self.battleCommands()
+                    self.participants = sorted(self.participants, key=lambda x: x.initiative, reverse = True)
+                if self.encounterRunning == False:
+                    break
+                currentInitiative-= 1
+                continue
+            self.currentRound+= 1
         
 
 print(Markdown("# DnD Initiative Tracker"))
@@ -152,7 +196,7 @@ choice_defaultCharacters = uitools.question_yn("Would you like to load the defau
 if choice_defaultCharacters == True :
     Hylwin = character("Hylwin",0,0,{})
     Zayne = character("Zayne",0,0,{})
-    CurrentEncounter = encounter("Current Encounter",[Hylwin, Zayne], False)
+    CurrentEncounter = encounter("Current Encounter",[Hylwin, Zayne], False, 1)
     for i in CurrentEncounter.participants:
         print(f"Added {i.name}")
 else :
@@ -176,49 +220,9 @@ print(Markdown("## Time to roll initiative"))
 for i in CurrentEncounter.participants:
     i.initiative = uitools.question_int(f"Initiative for {i.name}?")
 
-CurrentEncounter.participants = sorted(CurrentEncounter.participants, key=lambda x: x.initiative, reverse = True)
-tableInitiativeOrder = Table(title="Initiative is as follows:")
-
-tableInitiativeOrder.add_column("Name")
-tableInitiativeOrder.add_column("Initiative", justify="right")
-for i in CurrentEncounter.participants:
-    tableInitiativeOrder.add_row(i.name, str(i.initiative))
-print(tableInitiativeOrder)
-
 # Combat
 
-print(Markdown("## Starting Combat"))
-round = 0
-CurrentEncounter.encounterRunning = True
-while CurrentEncounter.encounterRunning == True:
-    round+= 1
-    announceRound = f"### Round {round}"
-    print(Markdown(announceRound))
-
-    highestInitiative = CurrentEncounter.participants[0].initiative
-    currentInitiative = highestInitiative
-
-    while currentInitiative >= 1:
-        activeCharacterIndex = CurrentEncounter.getIndexOfParticipantByInitiative(currentInitiative)
-        if len(activeCharacterIndex) != 0:
-            for i in activeCharacterIndex:
-                # showing character name and initiative value
-                print(Markdown(f"#### {CurrentEncounter.participants[i].initiative}: Your turn, {CurrentEncounter.participants[i].name}"))
-                # fetching all conditions
-                if len(CurrentEncounter.participants[i].conditions) > 0 :
-                    tableConditions = Table(title="Current Conditions")
-                    tableConditions.add_column("Condition")
-                    tableConditions.add_column("Description")
-                    conditionlist = list(CurrentEncounter.participants[i].conditions.values())
-                    for i in conditionlist:
-                        tableConditions.add_row(i.name, i.description)
-                    print(tableConditions)
-            CurrentEncounter.battleCommands()
-            CurrentEncounter.participants = sorted(CurrentEncounter.participants, key=lambda x: x.initiative, reverse = True)
-        if CurrentEncounter.encounterRunning == False:
-            break
-        currentInitiative-= 1
-        continue
+CurrentEncounter.runEncounter()
 
 
 # adding during battle
